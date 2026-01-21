@@ -10,9 +10,17 @@ import { DB_ADDRESS } from './config'
 import errorHandler from './middlewares/error-handler'
 import serveStatic from './middlewares/serverStatic'
 import routes from './routes'
+import rateLimit from 'express-rate-limit'
 
 const { PORT = 3000 } = process.env
 const app = express()
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: 'Слишком много запросов с этого IP, попробуйте позже.'
+})
+app.use(limiter)
 
 app.use(cookieParser());
 const csrfProtection = csrf({ cookie: true });
