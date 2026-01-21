@@ -5,6 +5,7 @@ import 'dotenv/config'
 import express, { json, urlencoded } from 'express'
 import mongoose from 'mongoose'
 import path from 'path'
+import csrf from 'csurf'
 import { DB_ADDRESS } from './config'
 import errorHandler from './middlewares/error-handler'
 import serveStatic from './middlewares/serverStatic'
@@ -13,7 +14,8 @@ import routes from './routes'
 const { PORT = 3000 } = process.env
 const app = express()
 
-app.use(cookieParser())
+app.use(cookieParser());
+const csrfProtection = csrf({ cookie: true });
 
 app.use(cors())
 // app.use(cors({ origin: ORIGIN_ALLOW, credentials: true }));
@@ -21,8 +23,22 @@ app.use(cors())
 
 app.use(serveStatic(path.join(__dirname, 'public')))
 
+// Эндпоинт для получения CSRF-токена
+app.get('/csrf-token', csrfProtection, (req, res) => {
+    res.json({ csrfToken: req.csrfToken() });
+});
+
 app.use(urlencoded({ extended: true }))
 app.use(json())
+
+// CSRF-защита для всех критических методов
+app.use((req, res, next) => {
+    // Только для методов, изменяющих данные
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+        return csrfProtection(req, res, next);
+    }
+    next();
+});
 
 app.options('*', cors())
 app.use(routes)

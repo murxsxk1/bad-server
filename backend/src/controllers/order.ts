@@ -292,15 +292,8 @@ export const createOrder = async (
         const basket: IProduct[] = []
         const products = await Product.find<IProduct>({})
         const userId = res.locals.user._id
-        const { address, payment, phone, total, email, items, comment } = req.body
-        // Санитизация комментария
-        const sanitizedComment = comment ? sanitizeHtml(comment, {
-            allowedTags: [ 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'br', 'p' ],
-            allowedAttributes: {
-                'a': [ 'href', 'name', 'target' ]
-            },
-            allowedSchemes: [ 'http', 'https', 'mailto' ]
-        }) : ''
+        const { address, payment, phone, total, email, items, comment } =
+            req.body
 
         items.forEach((id: Types.ObjectId) => {
             const product = products.find((p) => p._id.equals(id))
@@ -317,6 +310,13 @@ export const createOrder = async (
             return next(new BadRequestError('Неверная сумма заказа'))
         }
 
+        const sanitizedComment = comment ? sanitizeHtml(comment, {
+            allowedTags: [ 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'br', 'p' ],
+            allowedAttributes: {
+                'a': [ 'href', 'name', 'target' ]
+            },
+            allowedSchemes: [ 'http', 'https', 'mailto' ]
+        }) : ''
         const newOrder = new Order({
             totalAmount: total,
             products: items,
