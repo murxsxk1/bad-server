@@ -16,7 +16,7 @@ interface PaginationResult<_, U> {
 }
 
 const usePagination = <T, U>(
-    asyncAction: AsyncThunk<T, Record<string, unknown>, any>,
+    asyncAction: AsyncThunk<T, Record<string, unknown>, Record<string, unknown>>,
     selector: (state: RootState) => U[],
     defaultLimit: number
 ): PaginationResult<T, U> => {
@@ -32,10 +32,10 @@ const usePagination = <T, U>(
 
     const limit = Number(searchParams.get('limit')) || defaultLimit
 
-    const fetchData = async (params: Record<string, any>) => {
-        const response: any = await dispatch(asyncAction(params))
-        setTotalPages(response.payload.pagination.totalPages)
-    }
+    const fetchData = useCallback(async (params: Record<string, unknown>) => {
+        const response = await dispatch(asyncAction(params))
+        setTotalPages((response as { payload: { pagination: { totalPages: number } } }).payload.pagination.totalPages)
+    }, [dispatch, asyncAction])
 
     useEffect(() => {
         const params = Object.fromEntries(searchParams.entries())
@@ -44,10 +44,9 @@ const usePagination = <T, U>(
                 setPage(1)
             }
         })
-    }, [currentPage, limit, searchParams])
+    }, [currentPage, limit, searchParams, data.length, fetchData, setPage])
 
-    const updateURL = (newParams: Record<string, any>) => {
-        3
+    const updateURL = useCallback((newParams: Record<string, unknown>) => {
         const updatedParams = new URLSearchParams(searchParams)
         Object.entries(newParams).forEach(([key, value]) => {
             if (value !== undefined) {
@@ -57,7 +56,7 @@ const usePagination = <T, U>(
             }
         })
         setSearchParams(updatedParams)
-    }
+    }, [searchParams, setSearchParams])
 
     const nextPage = () => {
         if (currentPage < totalPages) {
@@ -71,10 +70,10 @@ const usePagination = <T, U>(
         }
     }
 
-    const setPage = (page: number) => {
+    const setPage = useCallback((page: number) => {
         const newPage = Math.max(1, Math.min(page, totalPages))
         updateURL({ page: newPage, limit })
-    }
+    }, [totalPages, updateURL, limit])
 
     const setLimit = (newLimit: number) => {
         updateURL({ page: 1, limit: newLimit }) // При изменении лимита возвращаемся на первую страницу

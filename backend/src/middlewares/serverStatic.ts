@@ -4,19 +4,25 @@ import path from 'path'
 
 export default function serveStatic(baseDir: string) {
     return (req: Request, res: Response, next: NextFunction) => {
-        // Определяем полный путь к запрашиваемому файлу
-        const filePath = path.join(baseDir, req.path)
+        // Определяем абсолютный путь к запрашиваемому файлу
+        const requestedPath = path.normalize(req.path)
+        const filePath = path.resolve(baseDir, `.${requestedPath}`)
 
-        // Проверяем, существует ли файл
+        // Проверка: filePath должен начинаться с baseDir
+        if (!filePath.startsWith(path.resolve(baseDir))) {
+            // Попытка обхода директорий
+            return res.status(403).send('Access denied')
+        }
+
         fs.access(filePath, fs.constants.F_OK, (err) => {
             if (err) {
-                // Файл не существует отдаем дальше мидлварам
+                // Файл не существует — передаём дальше
                 return next()
             }
             // Файл существует, отправляем его клиенту
-            return res.sendFile(filePath, (err) => {
-                if (err) {
-                    next(err)
+            return res.sendFile(filePath, (sendFileErr) => {
+                if (sendFileErr) {
+                    next(sendFileErr)
                 }
             })
         })
