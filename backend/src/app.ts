@@ -10,51 +10,62 @@ import { DB_ADDRESS } from './config'
 import errorHandler from './middlewares/error-handler'
 import serveStatic from './middlewares/serverStatic'
 import routes from './routes'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const rateLimit = require('express-rate-limit')
 
 const { PORT = 3000 } = process.env
 const app = express()
 
+// Rate limiting для защиты от DDoS
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Слишком много запросов с этого IP, попробуйте позже.'
+    windowMs: 1 * 60 * 1000, // 1 минута
+    max: 15, // 15 запросов в минуту (минимум 10 по ТЗ)
+    message: 'Слишком много запросов с этого IP, попробуйте позже.',
 })
-app.use(limiter)
 
-app.use(cookieParser());
-const csrfProtection = csrf({ cookie: true });
+app.use(limiter)
+app.use(cookieParser())
+
+const csrfProtection = csrf({ cookie: true })
 
 app.use(cors())
-// app.use(cors({ origin: ORIGIN_ALLOW, credentials: true }));
-// app.use(express.static(path.join(__dirname, 'public')));
-
 app.use(serveStatic(path.join(__dirname, 'public')))
 
-// Эндпоинт для получения CSRF-токена
+// Эндпоинт для получения CSRF-токена (ДО парсинга body!)
 app.get('/csrf-token', csrfProtection, (req, res) => {
-    res.json({ csrfToken: req.csrfToken() });
-});
+    res.json({ csrfToken: req.csrfToken() })
+})
 
 app.use(urlencoded({ extended: true }))
 app.use(json())
 
-// CSRF-защита для всех критических методов
+// CSRF-защита для всех критических методов, КРОМЕ публичных endpoints
 app.use((req, res, next) => {
+    // Публичные endpoints, не требующие CSRF-защиты
+    const publicEndpoints = ['/auth/login', '/auth/register', '/csrf-token']
+
     // Только для методов, изменяющих данные
-    if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
-        return csrfProtection(req, res, next);
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+        // Проверяем полный путь (req.path включает префиксы из routes)
+        const isPublicEndpoint = publicEndpoints.some(
+            (endpoint) =>
+                req.path === endpoint || req.path.startsWith(`${endpoint}/`)
+        )
+
+        if (isPublicEndpoint) {
+            return next()
+        }
+
+        return csrfProtection(req, res, next)
     }
-    next();
-});
+
+    next()
+})
 
 app.options('*', cors())
 app.use(routes)
 app.use(errors())
 app.use(errorHandler)
-
-// eslint-disable-next-line no-console
 
 const bootstrap = async () => {
     try {
