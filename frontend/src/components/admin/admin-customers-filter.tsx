@@ -10,30 +10,39 @@ import Filter from '../filter'
 import styles from './admin.module.scss'
 import { customersFilterFields } from './helpers/customersFilterFields'
 
+type FilterValue =
+    | string
+    | number
+    | { value: string; label: string }
+    | null
+
 export default function AdminFilterCustomers() {
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const [_, setSearchParams] = useSearchParams()
+    const [, setSearchParams] = useSearchParams()
     const { updateFilter, clearFilters } = useActionCreators(customersActions)
+
     const filterCustomersOption = useSelector(
         customersSelector.selectFilterOption
     )
-     
 
-    const handleFilter = (filters: Record<string, unknown>) => {
+    const handleFilter = (filters: Record<string, FilterValue>) => {
         dispatch(updateFilter({ ...filters }))
-        const queryParams: { [key: string]: string } = {}
+
+        const queryParams: Record<string, string> = {}
+
         Object.entries(filters).forEach(([key, value]) => {
             if (value) {
                 queryParams[key] =
-                    typeof value === 'object' ? value.value : value.toString()
+                    typeof value === 'object'
+                        ? value.value
+                        : value.toString()
             }
         })
+
         setSearchParams(queryParams)
         navigate(
-            `${AppRoute.AdminCustomers}?${new URLSearchParams(
-                queryParams
-            ).toString()}`
+            `${AppRoute.AdminCustomers}?${new URLSearchParams(queryParams)}`
         )
     }
 
