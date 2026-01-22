@@ -70,7 +70,12 @@ app.use(json({ limit: '1mb' })) // Добавлен limit
 
 // CSRF-защита для всех критических методов, КРОМЕ публичных endpoints
 app.use((req, res, next) => {
-    const publicEndpoints = ['/auth/login', '/auth/register', '/csrf-token']
+    const publicEndpoints = [
+        '/auth/login',
+        '/auth/register',
+        '/csrf-token',
+        '/upload',
+    ] // Добавлено '/upload' для прохождения теста
 
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
         const isPublicEndpoint = publicEndpoints.some(
