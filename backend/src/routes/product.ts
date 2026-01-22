@@ -15,7 +15,10 @@ import { Role } from '../models/user'
 
 const productRouter = Router()
 
+// Публичный endpoint - просмотр товаров
 productRouter.get('/', getProducts)
+
+// Административные endpoints - только для администраторов
 productRouter.post(
     '/',
     auth,
@@ -23,13 +26,7 @@ productRouter.post(
     validateProductBody,
     createProduct
 )
-productRouter.delete(
-    '/:productId',
-    auth,
-    roleGuardMiddleware(Role.Admin),
-    validateObjId,
-    deleteProduct
-)
+
 productRouter.patch(
     '/:productId',
     auth,
@@ -37,6 +34,14 @@ productRouter.patch(
     validateObjId,
     validateProductUpdateBody,
     updateProduct
+)
+
+productRouter.delete(
+    '/:productId',
+    auth,
+    roleGuardMiddleware(Role.Admin),
+    validateObjId,
+    deleteProduct
 )
 
 export default productRouter

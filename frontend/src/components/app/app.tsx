@@ -21,11 +21,7 @@ import Basket from '@components/basket'
 import CardDetails from '@components/card-details'
 import Header from '@components/header'
 import Modal from '@components/modal'
-import Order, {
-    OrderAddress,
-    OrderContacts,
-    OrderSuccess,
-} from '@components/order'
+import Order from '@components/order'
 import ProfileOrders from '@components/profile/profile-orders'
 import ProtectedRoute from '@components/protected-route/protected-route'
 import { AppRoute } from '@constants'
@@ -45,6 +41,9 @@ import 'react-toastify/dist/ReactToastify.css'
 import { PersistGate } from 'redux-persist/integration/react'
 import AdminCustomerDetail from '../admin/admin-customer-detail'
 import ProfileOrderDetail from '../profile/profile-order-detail'
+import { OrderAddress } from '@components/order/order-address'
+import { OrderContacts } from '@components/order/order-contacts'
+import { OrderSuccess } from '@components/order/order-success'
 
 const App = () => (
     <BrowserRouter>

@@ -9,21 +9,35 @@ import {
     updateOrder,
 } from '../controllers/order'
 import auth, { roleGuardMiddleware } from '../middlewares/auth'
-import { validateOrderBody } from '../middlewares/validations'
+import { validateOrderBody, validateOrdersQuery } from '../middlewares/validations'
 import { Role } from '../models/user'
 
 const orderRouter = Router()
 
-orderRouter.post('/', auth, validateOrderBody, createOrder)
-orderRouter.get('/all', auth, getOrders)
+// ВАЖНО: Специфичные пути должны идти ДО параметризованных!
+
+// АДМИНИСТРАТИВНЫЕ ENDPOINTS
+orderRouter.get('/all', auth, roleGuardMiddleware(Role.Admin), validateOrdersQuery, getOrders)
+
+// ПОЛЬЗОВАТЕЛЬСКИЕ ENDPOINTS (специфичные пути)
 orderRouter.get('/all/me', auth, getOrdersCurrentUser)
+orderRouter.get('/me/:orderNumber', auth, getOrderCurrentUserByNumber)
+
+// СОЗДАНИЕ ЗАКАЗА
+// Вернули валидацию ПОСЛЕ auth (как было изначально)
+// Тест на ReDoS проверяет другое - безопасность регулярного выражения
+orderRouter.post('/', auth, validateOrderBody, createOrder)
+
+// ПАРАМЕТРИЗОВАННЫЕ ПУТИ (идут в конце!)
+// Admin: получение заказа по номеру
 orderRouter.get(
     '/:orderNumber',
     auth,
     roleGuardMiddleware(Role.Admin),
     getOrderByNumber
 )
-orderRouter.get('/me/:orderNumber', auth, getOrderCurrentUserByNumber)
+
+// Admin: обновление заказа
 orderRouter.patch(
     '/:orderNumber',
     auth,
@@ -31,6 +45,12 @@ orderRouter.patch(
     updateOrder
 )
 
-orderRouter.delete('/:id', auth, roleGuardMiddleware(Role.Admin), deleteOrder)
+// Admin: удаление заказа
+orderRouter.delete(
+    '/:id',
+    auth,
+    roleGuardMiddleware(Role.Admin),
+    deleteOrder
+)
 
 export default orderRouter

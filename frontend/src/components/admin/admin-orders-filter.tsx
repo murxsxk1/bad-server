@@ -6,27 +6,56 @@ import { AppRoute } from '../../utils/constants'
 import Filter from '../filter'
 import styles from './admin.module.scss'
 import { ordersFilterFields } from './helpers/ordersFilterFields'
+import { StatusType } from '@types'
+
+type SelectOption<T extends string = string> = {
+    value: T
+    label: string
+}
+
+type OrderFilters = {
+    status?: SelectOption<StatusType> | null
+    [key: string]: string | number | SelectOption | null | undefined
+}
 
 export default function AdminFilterOrders() {
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const [_, setSearchParams] = useSearchParams()
+    const [, setSearchParams] = useSearchParams()
 
     const { updateFilter, clearFilters } = useActionCreators(ordersActions)
     const filterOrderOption = useSelector(ordersSelector.selectFilterOption)
 
-    const handleFilter = (filters: Record<string, any>) => {
-        dispatch(updateFilter({ ...filters, status: filters.status.value }))
-        const queryParams: { [key: string]: string } = {}
+    const handleFilter = (filters: OrderFilters) => {
+        const status =
+            filters.status && typeof filters.status === 'object'
+                ? filters.status.value
+                : undefined
+
+        dispatch(
+            updateFilter({
+                ...filters,
+                status,
+            })
+        )
+
+        const queryParams: Record<string, string> = {}
+
         Object.entries(filters).forEach(([key, value]) => {
-            if (value) {
-                queryParams[key] =
-                    typeof value === 'object' ? value.value : value.toString()
+            if (!value) return
+
+            if (typeof value === 'object' && 'value' in value) {
+                queryParams[key] = String(value.value)
+            } else {
+                queryParams[key] = String(value)
             }
         })
+
         setSearchParams(queryParams)
         navigate(
-            `${AppRoute.AdminOrders}?${new URLSearchParams(queryParams).toString()}`
+            `${AppRoute.AdminOrders}?${new URLSearchParams(
+                queryParams
+            ).toString()}`
         )
     }
 
