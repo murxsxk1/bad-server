@@ -7,24 +7,25 @@ import {
     getOrders,
     getOrdersCurrentUser,
     updateOrder,
-} from '../controllers/order'  // ИСПРАВЛЕНО: orders.ts (с "s")
+} from '../controllers/order'
 import auth, { roleGuardMiddleware } from '../middlewares/auth'
-import { validateOrderBody } from '../middlewares/validations'
+import { validateOrderBody, validateOrdersQuery } from '../middlewares/validations'
 import { Role } from '../models/user'
 
 const orderRouter = Router()
 
 // ВАЖНО: Специфичные пути должны идти ДО параметризованных!
 
-// АДМИНИСТРАТИВНЫЕ ENDPOINTS (специфичные пути идут первыми)
-orderRouter.get('/all', auth, roleGuardMiddleware(Role.Admin), getOrders)
+// АДМИНИСТРАТИВНЫЕ ENDPOINTS
+orderRouter.get('/all', auth, roleGuardMiddleware(Role.Admin), validateOrdersQuery, getOrders)
 
 // ПОЛЬЗОВАТЕЛЬСКИЕ ENDPOINTS (специфичные пути)
 orderRouter.get('/all/me', auth, getOrdersCurrentUser)
 orderRouter.get('/me/:orderNumber', auth, getOrderCurrentUserByNumber)
 
-// СОЗДАНИЕ ЗАКАЗА (публичный для авторизованных)
-orderRouter.post('/', auth, validateOrderBody, createOrder)
+// СОЗДАНИЕ ЗАКАЗА
+// Валидация ПЕРЕД auth для корректной обработки ошибок валидации (400 вместо 403)
+orderRouter.post('/', validateOrderBody, auth, createOrder)
 
 // ПАРАМЕТРИЗОВАННЫЕ ПУТИ (идут в конце!)
 // Admin: получение заказа по номеру
