@@ -298,10 +298,10 @@ export const createOrder = async (
     items.forEach((id: Types.ObjectId) => {
       const product = products.find((p) => p._id.equals(id))
       if (!product) {
-        throw new BadRequestError(`Товар с id ${id} не найден`)
+        throw new BadRequestError(`Товар с id ${id} не найден`)  // Добавлены backticks
       }
       if (product.price === null) {
-        throw new BadRequestError(`Товар с id ${id} не продается`)
+        throw new BadRequestError(`Товар с id ${id} не продается`)  // Добавлены backticks
       }
       return basket.push(product)
     })
@@ -345,7 +345,7 @@ export const updateOrder = async (
     const { status, comment } = req.body
 
     const updateData: any = { status }
-    
+
     if (comment !== undefined) {
       updateData.comment = sanitizeComment(comment)
     }
