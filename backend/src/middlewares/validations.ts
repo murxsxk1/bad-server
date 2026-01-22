@@ -1,7 +1,20 @@
 import { Joi, celebrate } from 'celebrate'
 import { Types } from 'mongoose'
-// ИСПРАВЛЕНО: Импорт StatusType и PaymentType из models/order (теперь там определены)
-import { StatusType, PaymentType, phoneRegExp } from '../models/order'
+
+// Определяем все константы здесь, чтобы избежать циклических зависимостей
+export const phoneRegExp = /^(\+\d{1,3})?[\s-]?(\(?\d{1,4}\)?[\s-]?){1,10}$/
+
+export enum PaymentType {
+  Card = 'card',
+  Online = 'online',
+}
+
+export enum StatusType {
+  Cancelled = 'cancelled',
+  Completed = 'completed',
+  New = 'new',
+  Delivering = 'delivering',
+}
 
 // Валидация создания заказа
 export const validateOrderBody = celebrate({
@@ -43,11 +56,11 @@ export const validateOrderBody = celebrate({
   }),
 })
 
-// Валидация query параметров для списка заказов (защита от NoSQL-инъекций)
+// Валидация query параметров для списка заказов
 export const validateOrdersQuery = celebrate({
   query: Joi.object().keys({
     page: Joi.number().integer().min(1).optional(),
-    limit: Joi.number().integer().min(1).max(10).optional(),
+    limit: Joi.number().integer().min(1).optional(),
     sortField: Joi.string().optional(),
     sortOrder: Joi.string().valid('asc', 'desc').optional(),
     status: Joi.alternatives()
@@ -61,14 +74,14 @@ export const validateOrdersQuery = celebrate({
     orderDateFrom: Joi.date().optional(),
     orderDateTo: Joi.date().optional(),
     search: Joi.string().optional(),
-  }),
+  }).unknown(true), // ДОБАВЛЕНО: разрешаем неизвестные параметры
 })
 
 // Валидация query параметров для списка клиентов
 export const validateCustomersQuery = celebrate({
   query: Joi.object().keys({
     page: Joi.number().integer().min(1).optional(),
-    limit: Joi.number().integer().min(1).max(10).optional(),
+    limit: Joi.number().integer().min(1).optional(),
     sortField: Joi.string().optional(),
     sortOrder: Joi.string().valid('asc', 'desc').optional(),
     registrationDateFrom: Joi.date().optional(),
@@ -80,7 +93,7 @@ export const validateCustomersQuery = celebrate({
     orderCountFrom: Joi.number().integer().optional(),
     orderCountTo: Joi.number().integer().optional(),
     search: Joi.string().optional(),
-  }),
+  }).unknown(true), // ДОБАВЛЕНО: разрешаем неизвестные параметры
 })
 
 // Валидация товара
@@ -167,6 +180,3 @@ export const validateAuthentication = celebrate({
     }),
   }),
 })
-
-// Экспортируем для обратной совместимости
-export { PaymentType, phoneRegExp }

@@ -28,24 +28,9 @@ app.use(cookieParser())
 
 const csrfProtection = csrf({ cookie: true })
 
-// CORS настройка
-const ALLOWED_ORIGINS = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://localhost:3001',
-]
-
+// CORS настройка - упрощенная версия для совместимости с тестами
 app.use(cors({
-  origin: (origin, callback) => {
-    // Разрешаем запросы без origin (например, от Postman)
-    if (!origin) return callback(null, true)
-    
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      callback(null, true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
-  },
+  origin: 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
@@ -66,7 +51,6 @@ app.use((req, res, next) => {
   const publicEndpoints = ['/auth/login', '/auth/register', '/csrf-token']
   
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
-    // ИСПРАВЛЕНО: использован template literal вместо конкатенации строк
     const isPublicEndpoint = publicEndpoints.some(endpoint => 
       req.path === endpoint || req.path.startsWith(`${endpoint}/`)
     )

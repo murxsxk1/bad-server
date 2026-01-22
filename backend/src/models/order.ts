@@ -1,25 +1,9 @@
 /* eslint-disable prefer-arrow-callback */
-/* eslint-disable import/no-cycle */
-// Циклическая зависимость неизбежна из-за связи между Order и User моделями
 import mongoose, { Document, Schema, Types } from 'mongoose'
 import validator from 'validator'
+import { PaymentType, phoneRegExp, StatusType } from '../middlewares/validations'
 import Counter from './counter'
 import User from './user'
-
-// Перемещены enum и phoneRegExp сюда, чтобы избежать импорта из validations
-export const phoneRegExp = /^(\+\d{1,3})?[\s-]?(\(?\d{1,4}\)?[\s-]?){1,10}$/
-
-export enum PaymentType {
-  Card = 'card',
-  Online = 'online',
-}
-
-export enum StatusType {
-  Cancelled = 'cancelled',
-  Completed = 'completed',
-  New = 'new',
-  Delivering = 'delivering',
-}
 
 export interface IOrder extends Document {
   id: Types.ObjectId
@@ -112,3 +96,6 @@ orderSchema.post('findOneAndDelete', async function updateUserStats(order) {
 })
 
 export default mongoose.model<IOrder>('order', orderSchema)
+
+// Экспортируем enum для обратной совместимости
+export { StatusType, PaymentType }

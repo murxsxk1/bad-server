@@ -24,8 +24,9 @@ orderRouter.get('/all/me', auth, getOrdersCurrentUser)
 orderRouter.get('/me/:orderNumber', auth, getOrderCurrentUserByNumber)
 
 // СОЗДАНИЕ ЗАКАЗА
-// Валидация ПЕРЕД auth для корректной обработки ошибок валидации (400 вместо 403)
-orderRouter.post('/', validateOrderBody, auth, createOrder)
+// Вернули валидацию ПОСЛЕ auth (как было изначально)
+// Тест на ReDoS проверяет другое - безопасность регулярного выражения
+orderRouter.post('/', auth, validateOrderBody, createOrder)
 
 // ПАРАМЕТРИЗОВАННЫЕ ПУТИ (идут в конце!)
 // Admin: получение заказа по номеру
